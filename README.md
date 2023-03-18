@@ -1,5 +1,20 @@
 # NissanConnect
 
+
+First of all, I did not create these awesome flows, I merly addapted them and make them working again after some URL changes by Nissan
+All credit goes to [netmb](https://github.com/netmb/nodered-nissanconnect) and more so to the amazing work of [Tobias Westergaard](https://gitlab.com/tobiaswkjeldsen/dartnissanconnect) where his code gave me good pointers.
+
+:warning:
+Be careful especially with the NissanConnectAction- usage. There will always be made a connection to your car (wakeup SMS). If you use it to often you will drain your 12V-Battery or/and will be banned by the NissanConnect-Service.
+
+:pushpin: What is not possible at this point is to Lock/Unlock the car, the API requires an addiotional srp HASH key which is not yet known how to get this.
+
+Task list :
+- [x] Batterystatus
+- [x] Lock state
+- [x] Location
+- [ ] Set climate from HA, but is already possible in the flows
+
 ## Nodered
 The Nodered flow that you can import will add all required sub-flows and requires minimal config.
 The only place where you need to change the credentials is in the following section 
