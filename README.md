@@ -26,11 +26,15 @@ Following flow will be shown.
 
 We are interested in the MQTT Node where you will change the details to match your own MQTT server
 
+The following information is currently broadcasted to mqtt :
+![image](https://user-images.githubusercontent.com/6417524/226115468-f4d8bda3-c961-4179-81e9-d3b99dfa7319.png)
+
 
 
 ## Adding the Sensors/info on the HomeAssistant Dashboard
 As all information is MQTT based you will need to base your sensors on the MQTT topic that get's published, I'm lazy and did not bother to remove leaf from the topic...
 The topic will be something like:  **leaf/YOURVIN/location/json**
+
 
 ### Device tracker
 
@@ -45,4 +49,68 @@ device_tracker:
     devices:
     Ariya: leaf/YOURVIN/location/json
 ```
+### Sensors
+
+```
+# configuration.yaml entry
+mqtt:
+  sensor:
+###### BATTERY ########      
+    - name: Ariya_battery_last_updated
+      state_topic: "leaf/YOURVIN/batteryStatus/timestamp"
+      device_class: timestamp
+
+    - name: leaf_battery_level
+      state_topic: "leaf/YOURVIN/batteryStatus/batteryLevel"
+      unit_of_measurement: "%"
+      device_class: battery
+
+    - name: Ariya_battery_Autonomy
+        # Since VIN is not specified, it will represent the state from the first vehicle in the account.
+      state_topic: "leaf/YOURVIN/batteryStatus/batteryAutonomy"
+      device_class: distance
+      unit_of_measurement: "km"
+
+    - name: Ariya_battery_last_updated
+      state_topic: "leaf/YOURVIN/batteryStatus/timestamp"
+      device_class: timestamp
+###### END BATTERY ########            
+
+###### Climate ########      
+    - name: "Ariya_cabin_temperature"
+      state_topic: "leaf/YOURVIN/hVacStatus/internalTemperature"
+      device_class: temperature
+      unit_of_measurement: "C"
+      
+    - name: "Ariya_cabin_temperature"
+      state_topic: "leaf/YOURVIN/hVacStatus/internalTemperature"
+      device_class: temperature
+      unit_of_measurement: "C"     
+###### Climate end ########      
+
+###### LOCK ########      
+    - name: "Ariya Sunroof state"
+      state_topic: "leaf/YOURVIN/LockStatus/sunroofStatus"
+
+    - name: "Ariya_Lock_state"
+      state_topic: "leaf/YOURVIN/LockStatus/lockStatus"      
+      
+    - name: "Ariya_Lock_state_LastUpdate"
+      state_topic: "leaf/YOURVIN/LockStatus/lastUpdateTime"
+      device_class: timestamp
+###### LOCK END########      
+  binary_sensor:
+    - name: Ariya_plugged_Status
+      state_topic: "leaf/YOURVIN/batteryStatus/plugStatus"
+      payload_on: "1"
+      payload_off: "0"
+
+    - name: Ariya_charging_Status
+      state_topic: "leaf/YOURVIN/batteryStatus/chargingStatus"
+      payload_on: "1"
+      payload_off: "0"
+
+```
+Once you have the sensors you can start adding them to your HA dashboard, your imagination is the only limiting factor
+![Screenshot 2023-03-18 163535 (1)](https://user-images.githubusercontent.com/6417524/226115683-c72ed14a-1e48-4048-a215-52f7a9e41f2f.png)
 
