@@ -1,0 +1,2493 @@
+[
+	{
+		"id": "bd5bde9e.6101c",
+		"type": "subflow",
+		"name": "NissanConnect-Actions",
+		"info": "This subflow sends http-requests to the\nNissanConnect-Service. All of the commands initiates a connection to the car -  NissanConnect sends an SMS-Message to the car, and waits for the response. Therefore it takes a while until the date is send back to the NissanConnect-Service.\n\n### Inputs\nmsg.command - one of the following:\n - \"refresh-battery-status\"\n - \"hvac-start\"\n - \"hvac-stop\"\n - \"refresh-hvac-status\"\n - \"trip-history\"\n - \"refresh-location\"\n - \"charging-start\"\n - \"charging-stop\"\n\nmsg.conf - the config object\n\nmsg.session - the session object\n\n### Outputs\n\nThe message object contains the http-request response. The response is delayed for 20 seconds.\n\n",
+		"category": "",
+		"in": [
+			{
+				"x": 60,
+				"y": 260,
+				"wires": [
+					{
+						"id": "210e9278.d8c336"
+					},
+					{
+						"id": "6cd7a8f3.399618"
+					},
+					{
+						"id": "61708792.2db17"
+					},
+					{
+						"id": "7ef09b41.53d14c"
+					},
+					{
+						"id": "5b7e3b7d.b24fe4"
+					},
+					{
+						"id": "afc97e46.1251f"
+					},
+					{
+						"id": "f4d89ac2.5ebc68"
+					},
+					{
+						"id": "12efd5f8a432bacb"
+					},
+					{
+						"id": "1d235e563825f1ca"
+					}
+				]
+			}
+		],
+		"out": [
+			{
+				"x": 840,
+				"y": 240,
+				"wires": [
+					{
+						"id": "c68ad8bf.26643",
+						"port": 0
+					}
+				]
+			}
+		],
+		"env": [],
+		"color": "#DDAA99"
+	},
+	{
+		"id": "210e9278.d8c336",
+		"type": "function",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"func": "if (msg.command != \"refresh-battery-status\") {\n    return null;\n}\nvar session = msg.session;\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'POST',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin +'/actions/refresh-battery-status',\n    'headers' : {\n      'Content-Type': 'application/vnd.api+json',\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nmsg.payload = {\n    'data': {'type': 'RefreshBatteryStatus'}\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 260,
+		"y": 100,
+		"wires": [
+			[
+				"ca16de7a.fd8278"
+			]
+		]
+	},
+	{
+		"id": "7419189e.74bb68",
+		"type": "comment",
+		"z": "bd5bde9e.6101c",
+		"name": "Request Battery Status from Car",
+		"info": "",
+		"x": 330,
+		"y": 60,
+		"wires": []
+	},
+	{
+		"id": "6cd7a8f3.399618",
+		"type": "function",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"func": "if (msg.command != \"hvac-start\") {\n    return null;\n}\n\nfunction formatDateWithTimeZone(d) {\n    var strOffset = \"\";\n    var offsetHour = d.getTimezoneOffset() / 60;\n    var str = Math.abs(offsetHour).toString().padStart(2, 0);\n    if (offsetHour < 0) {\n      strOffset = \"+\" + str + \":00\";\n    }\n    else {\n      strOffset = \"-\" + str + \":00\";\n    }\n    \n    function pad(n){return n<10 ? '0'+n : n}\n    return d.getFullYear()+'-'\n    + pad(d.getMonth()+1)+'-'\n    + pad(d.getDate())+'T'\n    + pad(d.getHours())+':'\n    + pad(d.getMinutes())+':'\n    + pad(d.getSeconds()) + strOffset\n}\n\nvar session = msg.session;\nvar conf = msg.conf;\n\nvar startDate = new Date();\nstartDate.setSeconds( startDate.getSeconds() + 5 );\nstartDate = formatDateWithTimeZone(startDate);\n\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'POST',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin +'/actions/hvac-start',\n    'headers' : {\n      'Content-Type': 'application/vnd.api+json',\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nmsg.payload = {\n    'data': {\n        'type': 'HvacStart',\n        'attributes': {\n              'action': 'start',\n              'targetTemperature': 21,\n              'startDateTime': startDate\n              \n        }\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 260,
+		"y": 200,
+		"wires": [
+			[
+				"ca16de7a.fd8278"
+			]
+		]
+	},
+	{
+		"id": "ca16de7a.fd8278",
+		"type": "http request",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"method": "use",
+		"ret": "txt",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 490,
+		"y": 240,
+		"wires": [
+			[
+				"c68ad8bf.26643",
+				"586b681f.17f0a"
+			]
+		]
+	},
+	{
+		"id": "eb2727a9.3a52c8",
+		"type": "comment",
+		"z": "bd5bde9e.6101c",
+		"name": "Start Climate",
+		"info": "",
+		"x": 270,
+		"y": 160,
+		"wires": []
+	},
+	{
+		"id": "61708792.2db17",
+		"type": "function",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"func": "if (msg.command != \"refresh-hvac-status\") {\n    return null;\n}\nvar session = msg.session;\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'POST',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin +'/actions/refresh-hvac-status',\n    'headers' : {\n      'Content-Type': 'application/vnd.api+json',\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nmsg.payload = {\n    'data': {'type': 'RefreshHvacStatus'}\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 260,
+		"y": 380,
+		"wires": [
+			[
+				"ca16de7a.fd8278"
+			]
+		]
+	},
+	{
+		"id": "bf923e4c.aaa118",
+		"type": "comment",
+		"z": "bd5bde9e.6101c",
+		"name": "Request Climate Status from Car",
+		"info": "",
+		"x": 330,
+		"y": 340,
+		"wires": []
+	},
+	{
+		"id": "7ef09b41.53d14c",
+		"type": "function",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"func": "if (msg.command != \"refresh-location\") {\n    return null;\n}\nvar session = msg.session;\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'POST',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin +'/actions/refresh-location',\n    'headers' : {\n      'Content-Type': 'application/vnd.api+json',\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nmsg.payload = {\n    'data': {'type': 'RefreshLocation'}\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 260,
+		"y": 480,
+		"wires": [
+			[
+				"ca16de7a.fd8278"
+			]
+		]
+	},
+	{
+		"id": "882a78f6.cfe788",
+		"type": "comment",
+		"z": "bd5bde9e.6101c",
+		"name": "Request Location Status from Car",
+		"info": "",
+		"x": 340,
+		"y": 440,
+		"wires": []
+	},
+	{
+		"id": "c68ad8bf.26643",
+		"type": "delay",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"pauseType": "delay",
+		"timeout": "20",
+		"timeoutUnits": "seconds",
+		"rate": "1",
+		"nbRateUnits": "1",
+		"rateUnits": "second",
+		"randomFirst": "1",
+		"randomLast": "5",
+		"randomUnits": "seconds",
+		"drop": false,
+		"outputs": 1,
+		"x": 690,
+		"y": 240,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "5b7e3b7d.b24fe4",
+		"type": "function",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"func": "if (msg.command != \"charging-start\") {\n    return null;\n}\nvar session = msg.session;\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'POST',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin +'/actions/charging-start',\n    'headers' : {\n      'Content-Type': 'application/vnd.api+json',\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nmsg.payload = {\n    'data': {'type': 'ChargingStart', 'attributes': 'start'}\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 260,
+		"y": 580,
+		"wires": [
+			[
+				"ca16de7a.fd8278"
+			]
+		]
+	},
+	{
+		"id": "3a9d19f6.f6354e",
+		"type": "comment",
+		"z": "bd5bde9e.6101c",
+		"name": "Request Charge Start",
+		"info": "",
+		"x": 300,
+		"y": 540,
+		"wires": []
+	},
+	{
+		"id": "a1af371.48f5d48",
+		"type": "comment",
+		"z": "bd5bde9e.6101c",
+		"name": "Request Charge Stop",
+		"info": "",
+		"x": 300,
+		"y": 640,
+		"wires": []
+	},
+	{
+		"id": "afc97e46.1251f",
+		"type": "function",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"func": "if (msg.command != \"charging-stop\") {\n    return null;\n}\nvar session = msg.session;\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'POST',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin +'/actions/charging-start',\n    'headers' : {\n      'Content-Type': 'application/vnd.api+json',\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nmsg.payload = {\n    'data': {'type': 'ChargingStart', 'attributes': 'stop'}\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 260,
+		"y": 680,
+		"wires": [
+			[
+				"ca16de7a.fd8278"
+			]
+		]
+	},
+	{
+		"id": "f3ad400c.9b1478",
+		"type": "comment",
+		"z": "bd5bde9e.6101c",
+		"name": "Stop Climate",
+		"info": "",
+		"x": 270,
+		"y": 240,
+		"wires": []
+	},
+	{
+		"id": "f4d89ac2.5ebc68",
+		"type": "function",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"func": "if (msg.command != \"hvac-stop\") {\n    return null;\n}\n\nfunction formatDateWithTimeZone(d) {\n    var strOffset = \"\";\n    var offsetHour = d.getTimezoneOffset() / 60;\n    var str = Math.abs(offsetHour).toString().padStart(2, 0);\n    if (offsetHour < 0) {\n      strOffset = \"+\" + str + \":00\";\n    }\n    else {\n      strOffset = \"-\" + str + \":00\";\n    }\n    \n    function pad(n){return n<10 ? '0'+n : n}\n    return d.getFullYear()+'-'\n    + pad(d.getMonth()+1)+'-'\n    + pad(d.getDate())+'T'\n    + pad(d.getHours())+':'\n    + pad(d.getMinutes())+':'\n    + pad(d.getSeconds()) + strOffset\n}\n\n\n\nvar session = msg.session;\nvar conf = msg.conf;\n\nvar startDate = new Date();\nstartDate.setSeconds( startDate.getSeconds() + 5 );\nstartDate = formatDateWithTimeZone(startDate);\n\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'POST',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin +'/actions/hvac-start',\n    'headers' : {\n      'Content-Type': 'application/vnd.api+json',\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nmsg.payload = {\n    'data': {\n        'type': 'HvacStart',\n        'attributes': {\n              'action': 'stop',\n              'targetTemperature': 21,\n              'startDateTime': startDate\n        }\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 260,
+		"y": 280,
+		"wires": [
+			[
+				"ca16de7a.fd8278"
+			]
+		]
+	},
+	{
+		"id": "586b681f.17f0a",
+		"type": "debug",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"active": true,
+		"tosidebar": true,
+		"console": false,
+		"tostatus": false,
+		"complete": "true",
+		"targetType": "full",
+		"statusVal": "",
+		"statusType": "auto",
+		"x": 650,
+		"y": 300,
+		"wires": []
+	},
+	{
+		"id": "12efd5f8a432bacb",
+		"type": "function",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"func": "if (msg.command != \"lock\") {\n    return null;\n}\nvar session = msg.session;\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'POST',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin +'/actions/lock-unlock',\n    'headers' : {\n      'Content-Type': 'application/vnd.api+json',\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nmsg.payload = {\n    'data': { \n        'type': 'LockUnlock', \n        'attributes': {\n            'lock': 'lock',\n            'doortype':'doors_hatch',\n            'srp':''\n        }\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 260,
+		"y": 760,
+		"wires": [
+			[
+				"3bfa54b318dca4d4",
+				"ca16de7a.fd8278"
+			]
+		]
+	},
+	{
+		"id": "f24c76eca0e13344",
+		"type": "comment",
+		"z": "bd5bde9e.6101c",
+		"name": "Request Lock",
+		"info": "",
+		"x": 270,
+		"y": 720,
+		"wires": []
+	},
+	{
+		"id": "a73f2c0e9bd295e4",
+		"type": "comment",
+		"z": "bd5bde9e.6101c",
+		"name": "Request un Lock",
+		"info": "",
+		"x": 280,
+		"y": 800,
+		"wires": []
+	},
+	{
+		"id": "1d235e563825f1ca",
+		"type": "function",
+		"z": "bd5bde9e.6101c",
+		"name": "",
+		"func": "if (msg.command != \"unlock\") {\n    return null;\n}\nvar session = msg.session;\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'POST',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin +'/actions/lock-unlock',\n    'headers' : {\n      'Content-Type': 'application/vnd.api+json',\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nmsg.payload = {\n    'data': { 'type': 'LockUnlock', 'attributes': {'lock': 'unlock','doortype':'doors_hatch','srp':''}}\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 260,
+		"y": 840,
+		"wires": [
+			[
+				"ca16de7a.fd8278"
+			]
+		]
+	},
+	{
+		"id": "3bfa54b318dca4d4",
+		"type": "debug",
+		"z": "bd5bde9e.6101c",
+		"name": "debug 8",
+		"active": true,
+		"tosidebar": true,
+		"console": false,
+		"tostatus": false,
+		"complete": "true",
+		"targetType": "full",
+		"statusVal": "",
+		"statusType": "auto",
+		"x": 580,
+		"y": 740,
+		"wires": []
+	},
+	{
+		"id": "a61efc55.35bde",
+		"type": "subflow",
+		"name": "NissanConnect-Status",
+		"info": "This subflow sends http-requests to the\nNissanConnect-Service, and stores the results\nto the configure MQTT-Server. None of the requests initiates a \"real-life\"-connection to the car - it returns the last known data.\n\n### Inputs\nmsg.command - one of the following:\n - \"battery-status\"\n - \"hvac-status\"\n - \"location\"\n - \"trip-history\"\n\nmsg.conf - the config object\n\nmsg.session - the session object\n\n**Optional for \"trip-history\":**\n\nmsg.startDate - \"YYYY-MM-DD\"\n\nmsg.endDate - \"YYYY-MM-DD\"\n\nmsg.type:\n - 0 = daily\n - 1 = monthly\n - 2 = yearly\n\n### Outputs\n\nThe message object contains the http-request response.\n\n",
+		"category": "",
+		"in": [
+			{
+				"x": 60,
+				"y": 300,
+				"wires": [
+					{
+						"id": "e89bb9df.3e55"
+					},
+					{
+						"id": "195a28b1.c9443f"
+					},
+					{
+						"id": "ad52299f.3cb9e8"
+					},
+					{
+						"id": "48faf653.094bd8"
+					},
+					{
+						"id": "e2219de84d917ebf"
+					}
+				]
+			}
+		],
+		"out": [
+			{
+				"x": 1060,
+				"y": 200,
+				"wires": [
+					{
+						"id": "efdc5924.f13468",
+						"port": 0
+					},
+					{
+						"id": "b09285cd.7186",
+						"port": 0
+					},
+					{
+						"id": "3d1cd7dd.2ac9f",
+						"port": 0
+					},
+					{
+						"id": "4b7ff349.3ce45c",
+						"port": 0
+					}
+				]
+			}
+		],
+		"env": [],
+		"color": "#DDAA99"
+	},
+	{
+		"id": "db0ade39.f840d",
+		"type": "comment",
+		"z": "a61efc55.35bde",
+		"name": "Request last Battery Status",
+		"info": "",
+		"x": 360,
+		"y": 140,
+		"wires": []
+	},
+	{
+		"id": "e89bb9df.3e55",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "if (msg.command != \"battery-status\") {\n    return null;\n}\nvar session = msg.session;\nflow.set('session', session);\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'GET',\n    'url' : conf.car_adapter_base_url + 'v2/cars/' + vin + '/battery-status',\n    'headers' : {\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 320,
+		"y": 180,
+		"wires": [
+			[
+				"907dd3e6.4c0f2"
+			]
+		]
+	},
+	{
+		"id": "907dd3e6.4c0f2",
+		"type": "http request",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 490,
+		"y": 180,
+		"wires": [
+			[
+				"efdc5924.f13468",
+				"ccc946faf714bf84"
+			]
+		]
+	},
+	{
+		"id": "efdc5924.f13468",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "var session = flow.get('session');\n\nvar car = msg.payload.data;\nvar attributes = car.attributes;\nvar mqttMessages = [];\nfor (var k in attributes) {\n var topic = 'leaf/' + car.id + '/batteryStatus/' + k;\n var payload = attributes[k];\n mqttMessages.push({topic: topic, payload: payload});\n}\nmsg = {};\nmsg.payload = mqttMessages;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 660,
+		"y": 180,
+		"wires": [
+			[
+				"3437b001.5f0e8"
+			]
+		]
+	},
+	{
+		"id": "807a9380.136638",
+		"type": "comment",
+		"z": "a61efc55.35bde",
+		"name": "Request last Climate State",
+		"info": "",
+		"x": 350,
+		"y": 260,
+		"wires": []
+	},
+	{
+		"id": "195a28b1.c9443f",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "if (msg.command != \"hvac-status\") {\n    return null;\n}\nvar session = msg.session;\nflow.set('session', session);\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'GET',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin + '/hvac-status',\n    'headers' : {\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 310,
+		"y": 300,
+		"wires": [
+			[
+				"8f0bf08b.fc59"
+			]
+		]
+	},
+	{
+		"id": "8f0bf08b.fc59",
+		"type": "http request",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 490,
+		"y": 300,
+		"wires": [
+			[
+				"b09285cd.7186",
+				"ccc946faf714bf84"
+			]
+		]
+	},
+	{
+		"id": "b09285cd.7186",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "var session = flow.get('session');\n\nvar car = msg.payload.data;\nvar attributes = car.attributes;\nvar mqttMessages = [];\nfor (var k in attributes) {\n var topic = 'leaf/' + car.id + '/hVacStatus/' + k;\n var payload = attributes[k];\n mqttMessages.push({topic: topic, payload: payload});\n}\nmsg = {};\nmsg.payload = mqttMessages;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 660,
+		"y": 300,
+		"wires": [
+			[
+				"3437b001.5f0e8"
+			]
+		]
+	},
+	{
+		"id": "3437b001.5f0e8",
+		"type": "split",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"splt": "\\n",
+		"spltType": "str",
+		"arraySplt": 1,
+		"arraySpltType": "len",
+		"stream": false,
+		"addname": "",
+		"x": 800,
+		"y": 300,
+		"wires": [
+			[
+				"9c9135b9.a63a"
+			]
+		]
+	},
+	{
+		"id": "9c9135b9.a63a",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "msg.topic = msg.payload.topic;\nmsg.payload = msg.payload.payload;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 940,
+		"y": 300,
+		"wires": [
+			[
+				"6865103a.a55f8"
+			]
+		]
+	},
+	{
+		"id": "6865103a.a55f8",
+		"type": "mqtt out",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"topic": "",
+		"qos": "",
+		"retain": "true",
+		"respTopic": "",
+		"contentType": "",
+		"userProps": "",
+		"correl": "",
+		"expiry": "",
+		"broker": "7d7cbdf0.729edc",
+		"x": 1090,
+		"y": 300,
+		"wires": []
+	},
+	{
+		"id": "f1254448.9573c8",
+		"type": "comment",
+		"z": "a61efc55.35bde",
+		"name": "Request last Location State",
+		"info": "",
+		"x": 360,
+		"y": 380,
+		"wires": []
+	},
+	{
+		"id": "ad52299f.3cb9e8",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "if (msg.command != \"location\") {\n    return null;\n}\nvar session = msg.session;\nflow.set('session', session);\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n    'method' : 'GET',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin + '/location',\n    'headers' : {\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 310,
+		"y": 420,
+		"wires": [
+			[
+				"3ff16fc1.b537b"
+			]
+		]
+	},
+	{
+		"id": "3ff16fc1.b537b",
+		"type": "http request",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 490,
+		"y": 420,
+		"wires": [
+			[
+				"3d1cd7dd.2ac9f",
+				"ccc946faf714bf84"
+			]
+		]
+	},
+	{
+		"id": "3d1cd7dd.2ac9f",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "var session = flow.get('session');\n\nvar car = msg.payload.data;\nvar attributes = car.attributes;\nvar mqttMessages = [];\nvar lat = 0;\nvar lon = 0;\nfor (var k in attributes) {\n var topic = 'leaf/' + car.id + '/location/' + k;\n var payload = attributes[k];\n //change name to longitude and latitude - required for geo-json\n if (k == \"gpsLongitude\") {\n     lon = attributes[k];\n }\n else if (k == \"gpsLatitude\") {\n     lat = attributes[k];\n } \n if (lat != 0 && lon != 0) {\n     topic = 'leaf/' + car.id + '/location/json';\n     payload = {'longitude': lon, 'latitude' : lat};\n }\n mqttMessages.push({topic: topic, payload: payload});\n}\nmsg = {};\nmsg.payload = mqttMessages;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 660,
+		"y": 420,
+		"wires": [
+			[
+				"3437b001.5f0e8"
+			]
+		]
+	},
+	{
+		"id": "812b5afc.599328",
+		"type": "comment",
+		"z": "a61efc55.35bde",
+		"name": "Trip-History",
+		"info": "",
+		"x": 310,
+		"y": 480,
+		"wires": []
+	},
+	{
+		"id": "48faf653.094bd8",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "if (msg.command != \"trip-history\") {\n    return null;\n}\nvar session = msg.session;\nflow.set('session', session);\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nvar startDate = msg.startDate;\nvar endDate = msg.endDate;\nvar type = msg.type; //0=daily, 1=monthly, 2=yearly\nflow.set('tripHistoryType', type);\nmsg = {\n    'method' : 'GET',\n    'url' : conf.car_adapter_base_url + 'v1/cars/' + vin + '/trip-history?start='+ startDate + '&end=' + endDate + '&type=' + type,\n    'headers' : {\n      'Authorization' : 'Bearer ' + session.bearerToken\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 310,
+		"y": 520,
+		"wires": [
+			[
+				"39e3ecf2.e8569c"
+			]
+		]
+	},
+	{
+		"id": "39e3ecf2.e8569c",
+		"type": "http request",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 490,
+		"y": 520,
+		"wires": [
+			[
+				"4b7ff349.3ce45c",
+				"ccc946faf714bf84"
+			]
+		]
+	},
+	{
+		"id": "4b7ff349.3ce45c",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "var session = flow.get('session');\nvar type = flow.get('tripHistoryType');\nvar car = msg.payload.data;\nvar attributes = car.attributes;\nvar mqttMessages = [];\nfor (var k in attributes) {\n var topic = 'leaf/' + car.id + '/tripHistory/' + type + '/' + k;\n var payload = attributes[k];\n mqttMessages.push({topic: topic, payload: payload});\n}\nmsg = {};\nmsg.payload = mqttMessages;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 660,
+		"y": 520,
+		"wires": [
+			[
+				"3437b001.5f0e8"
+			]
+		]
+	},
+	{
+		"id": "ccc946faf714bf84",
+		"type": "debug",
+		"z": "a61efc55.35bde",
+		"name": "debug 6",
+		"active": true,
+		"tosidebar": true,
+		"console": false,
+		"tostatus": false,
+		"complete": "false",
+		"statusVal": "",
+		"statusType": "auto",
+		"x": 660,
+		"y": 240,
+		"wires": []
+	},
+	{
+		"id": "e2219de84d917ebf",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "if (msg.command != \"lockstatus\") {\n  return null;\n}\nvar session = msg.session;\nflow.set('session', session);\nvar conf = msg.conf;\nvar vin = session.vehicle.vin;\nmsg = {\n  'method': 'GET',\n  'url': conf.car_adapter_base_url + 'v1/cars/' + vin + '/lock-status',\n  'headers': {\n    'Authorization': 'Bearer ' + session.bearerToken\n  }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 320,
+		"y": 580,
+		"wires": [
+			[
+				"68e47391b9dca23b"
+			]
+		]
+	},
+	{
+		"id": "68e47391b9dca23b",
+		"type": "http request",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 490,
+		"y": 580,
+		"wires": [
+			[
+				"ccc946faf714bf84",
+				"3b4eb828e96f523e"
+			]
+		]
+	},
+	{
+		"id": "3b4eb828e96f523e",
+		"type": "function",
+		"z": "a61efc55.35bde",
+		"name": "",
+		"func": "var session = flow.get('session');\n\nvar car = msg.payload.data;\nvar attributes = car.attributes;\nvar mqttMessages = [];\nfor (var k in attributes) {\n var topic = 'leaf/' + car.id + '/LockStatus/' + k;\n var payload = attributes[k];\n mqttMessages.push({topic: topic, payload: payload});\n}\nmsg = {};\nmsg.payload = mqttMessages;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 660,
+		"y": 580,
+		"wires": [
+			[
+				"c1742e5daebbeaac",
+				"3437b001.5f0e8"
+			]
+		]
+	},
+	{
+		"id": "c1742e5daebbeaac",
+		"type": "debug",
+		"z": "a61efc55.35bde",
+		"name": "debug 7",
+		"active": true,
+		"tosidebar": true,
+		"console": false,
+		"tostatus": false,
+		"complete": "false",
+		"statusVal": "",
+		"statusType": "auto",
+		"x": 820,
+		"y": 580,
+		"wires": []
+	},
+	{
+		"id": "7d7cbdf0.729edc",
+		"type": "mqtt-broker",
+		"name": "your Broker",
+		"broker": "127.0.0.1",
+		"port": "1883",
+		"clientid": "",
+		"autoConnect": true,
+		"usetls": false,
+		"protocolVersion": "4",
+		"keepalive": "60",
+		"cleansession": true,
+		"birthTopic": "",
+		"birthQos": "0",
+		"birthRetain": "false",
+		"birthPayload": "",
+		"birthMsg": {},
+		"closeTopic": "",
+		"closePayload": "",
+		"closeMsg": {},
+		"willTopic": "",
+		"willQos": "0",
+		"willRetain": "false",
+		"willPayload": "",
+		"willMsg": {},
+		"userProps": "",
+		"sessionExpiry": "",
+		"credentials": {}
+	},
+	{
+		"id": "384815d.e67a5ea",
+		"type": "subflow",
+		"name": "NissanConnect-Session",
+		"info": "This subflow authenticates against NissanConnect-Services and returns a session-Object (mainly the required Bearer-token)\n\n### Inputs\nThis subflow requires a config-Object as msg.payload\n\n### Outputs\nThe message.payload contains the session-object.\n\n",
+		"category": "",
+		"in": [
+			{
+				"x": 80,
+				"y": 80,
+				"wires": [
+					{
+						"id": "cb8886d8.bff518"
+					}
+				]
+			}
+		],
+		"out": [
+			{
+				"x": 460,
+				"y": 260,
+				"wires": [
+					{
+						"id": "642b857c.eb3744",
+						"port": 0
+					}
+				]
+			}
+		],
+		"env": [],
+		"color": "#DDAA99"
+	},
+	{
+		"id": "cb8886d8.bff518",
+		"type": "function",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"func": "var conf = msg.payload;\nflow.set('conf', conf);\nmsg = {\n    'method' : 'POST',\n    'url' : conf.auth_base_url + \"json/realms/root/realms/\" + conf.realm + '/authenticate',\n    'headers' : {\n        'Accept-Api-Version': conf.api_version,\n          'X-Username': 'anonymous',\n          'X-Password': 'anonymous',\n          'Content-Type': 'application/json',\n          'Accept': 'application/json'\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 340,
+		"y": 80,
+		"wires": [
+			[
+				"ace991eb.89ec3"
+			]
+		]
+	},
+	{
+		"id": "ace991eb.89ec3",
+		"type": "http request",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 530,
+		"y": 80,
+		"wires": [
+			[
+				"949cafdd.bf1a8"
+			]
+		]
+	},
+	{
+		"id": "949cafdd.bf1a8",
+		"type": "function",
+		"z": "384815d.e67a5ea",
+		"name": "store Authid & prepare Request",
+		"func": "var authId = msg.payload.authId;\nflow.set('authId', authId);\nvar conf = flow.get('conf');\nmsg = {\n    'method' : 'POST',\n    'url' : conf.auth_base_url + \"json/realms/root/realms/\" + conf.realm + '/authenticate',\n    'headers' : {\n        'Accept-Api-Version': conf.api_version,\n          'X-Username': 'anonymous',\n          'X-Password': 'anonymous',\n          'Content-Type': 'application/json',\n          'Accept': 'application/json'\n    }\n}\nmsg.payload = {\n  'authId': authId,\n  'template': '',\n  'stage': 'LDAP1',\n  'header': 'Sign in',\n  'callbacks': [\n    {\n      'type': 'NameCallback',\n      'output': [{'name': 'prompt', 'value': 'User Name:'}],\n      'input': [{'name': 'IDToken1', 'value': conf.username}]\n    },\n    {\n      'type': 'PasswordCallback',\n      'output': [{'name': 'prompt', 'value': 'Password:'}],\n      'input': [{'name': 'IDToken2', 'value': conf.password}]\n    }\n  ]\n}\n\nreturn msg;\n",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 790,
+		"y": 80,
+		"wires": [
+			[
+				"bd97e348.3a94c8",
+				"11ae464303229fc0"
+			]
+		]
+	},
+	{
+		"id": "bd97e348.3a94c8",
+		"type": "http request",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 150,
+		"y": 140,
+		"wires": [
+			[
+				"59be2621.6f8fb8"
+			]
+		]
+	},
+	{
+		"id": "59be2621.6f8fb8",
+		"type": "function",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"func": "var retry = flow.get('retry') || 0;\nif (msg.statusCode == 401 && retry < 10) {\n    retry++;\n    flow.set('retry', retry);\n    return [null, {payload: {authId: flow.get('authId')}}];\n}\nflow.set('retry', 0);\nvar conf = flow.get('conf');\nvar authCookie = msg.payload.tokenId;\nvar realm = msg.payload.realm; \nflow.set('realm', realm);\nmsg = {\n    method: 'GET',\n    followRedirects: false,\n    rejectUnauthorized: false,\n    url: conf.auth_base_url + \"oauth2\" + realm  + \"/authorize?client_id=\" + conf.client_id + \"&redirect_uri=\" + conf.redirect_uri + \"&response_type=code&scope=\" + conf.scope + \"&nonce=sdfdsfez\",\n    headers : {\n        'Cookie': 'i18next=en-UK; amlbcookie=05; kauthSession=\"' + authCookie + '\"'\n    }\n}\n\nreturn [msg, null];",
+		"outputs": 2,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 340,
+		"y": 140,
+		"wires": [
+			[
+				"87a038b6.c29428"
+			],
+			[
+				"949cafdd.bf1a8"
+			]
+		]
+	},
+	{
+		"id": "87a038b6.c29428",
+		"type": "http request",
+		"z": "384815d.e67a5ea",
+		"name": "generates Error",
+		"method": "use",
+		"ret": "txt",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 540,
+		"y": 140,
+		"wires": [
+			[
+				"1d74f4ad.3d0deb"
+			]
+		]
+	},
+	{
+		"id": "1d74f4ad.3d0deb",
+		"type": "function",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"func": "var resp = msg.headers.location;\nvar code = resp.split('=')[1].split('&')[0];\nvar conf = flow.get('conf');\nvar realm = flow.get('realm');\nmsg = {\n    'method' : 'POST',\n    'url' : conf.auth_base_url + 'oauth2' + realm + '/access_token?code=' + code + '&client_id=' + conf.client_id + '&client_secret=' + conf.client_secret + '&redirect_uri=' + conf.redirect_uri + '&grant_type=authorization_code',\n    'headers' : {\n      'Content-Type': 'application/x-www-form-urlencoded'\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 720,
+		"y": 140,
+		"wires": [
+			[
+				"73a616e0.6e7808",
+				"11ae464303229fc0"
+			]
+		]
+	},
+	{
+		"id": "73a616e0.6e7808",
+		"type": "http request",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 150,
+		"y": 200,
+		"wires": [
+			[
+				"200d8a9a.ac087e"
+			]
+		]
+	},
+	{
+		"id": "200d8a9a.ac087e",
+		"type": "function",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"func": "var bearerToken = msg.payload.access_token;\nflow.set('bearerToken', bearerToken);\nvar conf = flow.get('conf');\nmsg = {\n    'method': 'GET',\n    'url': conf.user_adapter_base_url + 'v1/users/current',\n    'headers': {\n        'Authorization' : 'Bearer ' +  bearerToken\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 340,
+		"y": 200,
+		"wires": [
+			[
+				"fcbed5b1.53d188"
+			]
+		]
+	},
+	{
+		"id": "fcbed5b1.53d188",
+		"type": "http request",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 530,
+		"y": 200,
+		"wires": [
+			[
+				"bd6d8c81.f6fc78"
+			]
+		]
+	},
+	{
+		"id": "bd6d8c81.f6fc78",
+		"type": "function",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"func": "var userId = msg.payload.userId;\nflow.set('userId', userId);\nvar conf = flow.get('conf');\nvar bearerToken = flow.get('bearerToken');\nmsg = {\n    'method': 'GET',\n    'url': conf.user_base_url + 'v4/users/' + userId + '/cars',\n    'headers': {\n        'Authorization' : 'Bearer ' +  bearerToken\n    }\n}\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 720,
+		"y": 200,
+		"wires": [
+			[
+				"8df23594.d09188",
+				"11ae464303229fc0"
+			]
+		]
+	},
+	{
+		"id": "8df23594.d09188",
+		"type": "http request",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"method": "use",
+		"ret": "obj",
+		"paytoqs": "ignore",
+		"url": "",
+		"tls": "",
+		"persist": false,
+		"proxy": "",
+		"authType": "",
+		"x": 150,
+		"y": 260,
+		"wires": [
+			[
+				"642b857c.eb3744"
+			]
+		]
+	},
+	{
+		"id": "642b857c.eb3744",
+		"type": "function",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"func": "var cars = msg.payload.data;\nvar session = {\n    'bearerToken': flow.get('bearerToken'),\n    'userId' : flow.get('userId')\n}\nif (cars.length == 0 ) {\n    node.warn('No cars found!');\n    session.vehicle = null;\n}\nelse {\n    session.vehicle = cars[0];\n    node.warn('NissanConnect found car. Login complete');\n}\nmsg.payload = session;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 340,
+		"y": 260,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "ffc4ee4.e538e9",
+		"type": "catch",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"scope": [
+			"87a038b6.c29428"
+		],
+		"uncaught": false,
+		"x": 120,
+		"y": 320,
+		"wires": [
+			[
+				"33a1b54907d3daa0"
+			]
+		]
+	},
+	{
+		"id": "33a1b54907d3daa0",
+		"type": "debug",
+		"z": "384815d.e67a5ea",
+		"name": "",
+		"active": true,
+		"tosidebar": true,
+		"console": false,
+		"tostatus": false,
+		"complete": "true",
+		"targetType": "full",
+		"statusVal": "",
+		"statusType": "auto",
+		"x": 250,
+		"y": 320,
+		"wires": []
+	},
+	{
+		"id": "11ae464303229fc0",
+		"type": "debug",
+		"z": "384815d.e67a5ea",
+		"name": "debug 5",
+		"active": true,
+		"tosidebar": true,
+		"console": false,
+		"tostatus": false,
+		"complete": "false",
+		"statusVal": "",
+		"statusType": "auto",
+		"x": 940,
+		"y": 360,
+		"wires": []
+	},
+	{
+		"id": "1bdb80b1.eb323f",
+		"type": "tab",
+		"label": "NissanConnect",
+		"disabled": false,
+		"info": ""
+	},
+	{
+		"id": "177ef365.30e0ed",
+		"type": "group",
+		"z": "1bdb80b1.eb323f",
+		"name": "Location",
+		"style": {
+			"label": true,
+			"label-position": "n"
+		},
+		"nodes": [
+			"4254245e.3ceb2c",
+			"f641eb2a.4b218",
+			"fc7d3808.383568",
+			"e5732a16.b23d5",
+			"d504a098.1adf6",
+			"81017a01.97fa3",
+			"e1977179.60968",
+			"21db686f.dd2c48"
+		],
+		"x": 274,
+		"y": 1025,
+		"w": 612,
+		"h": 216
+	},
+	{
+		"id": "2925925b.7efa4e",
+		"type": "group",
+		"z": "1bdb80b1.eb323f",
+		"name": "Climate",
+		"style": {
+			"label": true,
+			"label-position": "n"
+		},
+		"nodes": [
+			"1bdea37.908c35d",
+			"c52017c4.96d798",
+			"c4b30fe3.457418",
+			"b6923db7.16a0c",
+			"b916a7ae.925a7",
+			"65b9eba7.b3233c",
+			"fefe729b.3ea268",
+			"8fb766b9.473688",
+			"61bc43a6.47bfb4",
+			"3589a453.55384c",
+			"56d702f2.a569b4",
+			"f6035def.a4056",
+			"1829af51.723e49",
+			"2a726d96.ad9b42",
+			"680d6094.becbb8",
+			"b438b8b1.d0902",
+			"4770554e.02abfc"
+		],
+		"x": 314,
+		"y": 479,
+		"w": 832,
+		"h": 502
+	},
+	{
+		"id": "601e0293.bd265c",
+		"type": "group",
+		"z": "1bdb80b1.eb323f",
+		"name": "Session & Token",
+		"style": {
+			"label": true,
+			"label-position": "n"
+		},
+		"nodes": [
+			"2bd5c800.411b6",
+			"2261587e.8a623",
+			"7d740e1e.5a3958",
+			"ef69d990.bae348",
+			"816e5ec7.c1e918",
+			"cb540c38.2b369",
+			"eed614b4.d4d42"
+		],
+		"x": 334,
+		"y": 59,
+		"w": 772,
+		"h": 122
+	},
+	{
+		"id": "74ca5b9.343a624",
+		"type": "group",
+		"z": "1bdb80b1.eb323f",
+		"name": "Battery",
+		"style": {
+			"label": true,
+			"label-position": "n"
+		},
+		"nodes": [
+			"a66c2738.ea4eb8",
+			"a4e01ab1.86867",
+			"c5fd7921.13c268",
+			"32a14566.4da1a2",
+			"ed9d0384.bed2d",
+			"ee9211fd.4d1df",
+			"43d0ee5e.0a33f8",
+			"5dd25679.cbd758"
+		],
+		"x": 334,
+		"y": 219,
+		"w": 592,
+		"h": 222
+	},
+	{
+		"id": "ba1d3621.0af9a8",
+		"type": "group",
+		"z": "1bdb80b1.eb323f",
+		"name": "History",
+		"style": {
+			"label": true,
+			"label-position": "n"
+		},
+		"nodes": [
+			"fc67da82.91ca88",
+			"a9b6566e.a4b598",
+			"ef7c2a3e.ccc0d",
+			"d943473d.83661"
+		],
+		"x": 274,
+		"y": 1299,
+		"w": 592,
+		"h": 122
+	},
+	{
+		"id": "51266fb376f26bdf",
+		"type": "group",
+		"z": "1bdb80b1.eb323f",
+		"name": "Lock state",
+		"style": {
+			"label": true
+		},
+		"nodes": [
+			"078b09960accb2d1",
+			"ce87968c374c7aea",
+			"f7047f08eb62555b"
+		],
+		"x": 274,
+		"y": 1439,
+		"w": 632,
+		"h": 102
+	},
+	{
+		"id": "2bd5c800.411b6",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "601e0293.bd265c",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "",
+		"crontab": "",
+		"once": true,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 450,
+		"y": 100,
+		"wires": [
+			[
+				"2261587e.8a623"
+			]
+		]
+	},
+	{
+		"id": "2261587e.8a623",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "601e0293.bd265c",
+		"name": "Set Flow-Vars/Config",
+		"func": "var conf = {\n  'client_id': 'a-ncb-prod-android', // CLIENT_ID_V2_EU_PROD\n  'client_secret': '0sAcrtwvwEXXZp5nzQhPexSRhxUVKa0d76F4uqDvxvvKFHXpo4myoJwUuV4vuNqC', // CLIENT_SECRET_V2_EU_PROD\n  'scope': 'openid profile vehicles', // API_SCOPE_V2_EU_PROD\n  'auth_base_url': 'https://prod.eu2.auth.kamereon.org/kauth/', // OAUTH_AUTHORIZATION_BASE_URL_V2_EU_PROD\n  'realm': 'a-ncb-prod', // OAUTH_REALM_DEFAULT_V2_EU_PROD CLIENT_ID_V2_EU_PROD\n  'redirect_uri': 'org.kamereon.service.nci:/oauth2redirect',\n  'car_adapter_base_url': 'https://alliance-platform-caradapter-prod.apps.eu2.kamereon.io/car-adapter/',\n  'user_adapter_base_url': 'https://alliance-platform-usersadapter-prod.apps.eu2.kamereon.io/user-adapter/',\n  'user_base_url': 'https://nci-bff-web-prod.apps.eu2.kamereon.io/bff-web/', // bffWeb_eu_prod\n  'api_version' : 'protocol=1.0,resource=2.1',\n  'username' : 'change@user', // CHANGE ME\n  'password' : 'ChangePassword',  // CHANGE ME\n  'timeZoneOffset': '+01:00' //Berlin\n}\nflow.set('conf', conf);\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 641,
+		"y": 100,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "7d740e1e.5a3958",
+		"type": "subflow:384815d.e67a5ea",
+		"z": "1bdb80b1.eb323f",
+		"g": "601e0293.bd265c",
+		"name": "",
+		"x": 790,
+		"y": 140,
+		"wires": [
+			[
+				"cb540c38.2b369"
+			]
+		]
+	},
+	{
+		"id": "ef69d990.bae348",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "601e0293.bd265c",
+		"name": "",
+		"func": "msg.payload = flow.get('conf');\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 600,
+		"y": 140,
+		"wires": [
+			[
+				"7d740e1e.5a3958"
+			]
+		]
+	},
+	{
+		"id": "816e5ec7.c1e918",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "601e0293.bd265c",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "3600",
+		"crontab": "",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 450,
+		"y": 140,
+		"wires": [
+			[
+				"ef69d990.bae348"
+			]
+		]
+	},
+	{
+		"id": "cb540c38.2b369",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "601e0293.bd265c",
+		"name": "Store Session",
+		"func": "flow.set('session', msg.payload);\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 1000,
+		"y": 140,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "eed614b4.d4d42",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "601e0293.bd265c",
+		"name": "<-- Edit Config !",
+		"info": "",
+		"x": 844,
+		"y": 100,
+		"wires": []
+	},
+	{
+		"id": "a66c2738.ea4eb8",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "74ca5b9.343a624",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "",
+		"crontab": "0 6-23 * * *",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 450,
+		"y": 300,
+		"wires": [
+			[
+				"5dd25679.cbd758"
+			]
+		]
+	},
+	{
+		"id": "a4e01ab1.86867",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "74ca5b9.343a624",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "",
+		"crontab": "0 5-19 * * *",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 450,
+		"y": 400,
+		"wires": [
+			[
+				"ed9d0384.bed2d"
+			]
+		]
+	},
+	{
+		"id": "c5fd7921.13c268",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "74ca5b9.343a624",
+		"name": "get last known state",
+		"info": "",
+		"x": 450,
+		"y": 360,
+		"wires": []
+	},
+	{
+		"id": "32a14566.4da1a2",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "74ca5b9.343a624",
+		"name": "get live status from car",
+		"info": "",
+		"x": 460,
+		"y": 260,
+		"wires": []
+	},
+	{
+		"id": "ed9d0384.bed2d",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "74ca5b9.343a624",
+		"name": "",
+		"func": "msg = {\n    command: 'battery-status',\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 620,
+		"y": 400,
+		"wires": [
+			[
+				"ee9211fd.4d1df"
+			]
+		]
+	},
+	{
+		"id": "ee9211fd.4d1df",
+		"type": "subflow:a61efc55.35bde",
+		"z": "1bdb80b1.eb323f",
+		"g": "74ca5b9.343a624",
+		"name": "",
+		"env": [],
+		"x": 800,
+		"y": 400,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "43d0ee5e.0a33f8",
+		"type": "subflow:bd5bde9e.6101c",
+		"z": "1bdb80b1.eb323f",
+		"g": "74ca5b9.343a624",
+		"name": "",
+		"env": [],
+		"x": 790,
+		"y": 300,
+		"wires": [
+			[
+				"ed9d0384.bed2d"
+			]
+		]
+	},
+	{
+		"id": "5dd25679.cbd758",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "74ca5b9.343a624",
+		"name": "",
+		"func": "msg = {\n    command: 'refresh-battery-status',\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 600,
+		"y": 300,
+		"wires": [
+			[
+				"43d0ee5e.0a33f8"
+			]
+		]
+	},
+	{
+		"id": "1bdea37.908c35d",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "",
+		"crontab": "0 5-19 * * *",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 430,
+		"y": 800,
+		"wires": [
+			[
+				"fefe729b.3ea268"
+			]
+		]
+	},
+	{
+		"id": "c52017c4.96d798",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "get last known state",
+		"info": "",
+		"x": 430,
+		"y": 740,
+		"wires": []
+	},
+	{
+		"id": "c4b30fe3.457418",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "",
+		"crontab": "0 6-23 * * *",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 430,
+		"y": 680,
+		"wires": [
+			[
+				"56d702f2.a569b4"
+			]
+		]
+	},
+	{
+		"id": "b6923db7.16a0c",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "get live data from car",
+		"info": "",
+		"x": 440,
+		"y": 620,
+		"wires": []
+	},
+	{
+		"id": "b916a7ae.925a7",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "",
+		"crontab": "",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 420,
+		"y": 560,
+		"wires": [
+			[
+				"61bc43a6.47bfb4"
+			]
+		]
+	},
+	{
+		"id": "65b9eba7.b3233c",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "start",
+		"info": "",
+		"x": 390,
+		"y": 520,
+		"wires": []
+	},
+	{
+		"id": "fefe729b.3ea268",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"func": "msg = {\n    command: 'hvac-status',\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 600,
+		"y": 800,
+		"wires": [
+			[
+				"8fb766b9.473688"
+			]
+		]
+	},
+	{
+		"id": "8fb766b9.473688",
+		"type": "subflow:a61efc55.35bde",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"x": 780,
+		"y": 800,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "61bc43a6.47bfb4",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"func": "msg = {\n    command: 'hvac-start',\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 580,
+		"y": 560,
+		"wires": [
+			[
+				"3589a453.55384c"
+			]
+		]
+	},
+	{
+		"id": "3589a453.55384c",
+		"type": "subflow:bd5bde9e.6101c",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"env": [],
+		"x": 790,
+		"y": 560,
+		"wires": [
+			[
+				"4770554e.02abfc"
+			]
+		]
+	},
+	{
+		"id": "56d702f2.a569b4",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"func": "msg = {\n    command: \"refresh-hvac-status\",\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 580,
+		"y": 680,
+		"wires": [
+			[
+				"f6035def.a4056"
+			]
+		]
+	},
+	{
+		"id": "f6035def.a4056",
+		"type": "subflow:bd5bde9e.6101c",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"x": 770,
+		"y": 680,
+		"wires": [
+			[
+				"fefe729b.3ea268"
+			]
+		]
+	},
+	{
+		"id": "1829af51.723e49",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "",
+		"crontab": "",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 420,
+		"y": 940,
+		"wires": [
+			[
+				"2a726d96.ad9b42"
+			]
+		]
+	},
+	{
+		"id": "2a726d96.ad9b42",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"func": "msg = {\n    command: 'hvac-stop',\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 560,
+		"y": 940,
+		"wires": [
+			[
+				"680d6094.becbb8"
+			]
+		]
+	},
+	{
+		"id": "680d6094.becbb8",
+		"type": "subflow:bd5bde9e.6101c",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "",
+		"env": [],
+		"x": 750,
+		"y": 940,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "b438b8b1.d0902",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "Stop Climate",
+		"info": "",
+		"x": 410,
+		"y": 880,
+		"wires": []
+	},
+	{
+		"id": "4770554e.02abfc",
+		"type": "delay",
+		"z": "1bdb80b1.eb323f",
+		"g": "2925925b.7efa4e",
+		"name": "wait another 20sec",
+		"pauseType": "delay",
+		"timeout": "20",
+		"timeoutUnits": "seconds",
+		"rate": "1",
+		"nbRateUnits": "1",
+		"rateUnits": "second",
+		"randomFirst": "1",
+		"randomLast": "5",
+		"randomUnits": "seconds",
+		"drop": false,
+		"outputs": 1,
+		"x": 1030,
+		"y": 560,
+		"wires": [
+			[
+				"56d702f2.a569b4"
+			]
+		]
+	},
+	{
+		"id": "4254245e.3ceb2c",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "177ef365.30e0ed",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "",
+		"crontab": "0 5-19 * * *",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 390,
+		"y": 1200,
+		"wires": [
+			[
+				"81017a01.97fa3"
+			]
+		]
+	},
+	{
+		"id": "f641eb2a.4b218",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "177ef365.30e0ed",
+		"name": "get last known state",
+		"info": "",
+		"x": 390,
+		"y": 1160,
+		"wires": []
+	},
+	{
+		"id": "fc7d3808.383568",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "177ef365.30e0ed",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "",
+		"crontab": "0 6-22 * * *",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 390,
+		"y": 1120,
+		"wires": [
+			[
+				"e1977179.60968"
+			]
+		]
+	},
+	{
+		"id": "e5732a16.b23d5",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "177ef365.30e0ed",
+		"name": "get live data from car",
+		"info": "",
+		"x": 400,
+		"y": 1066,
+		"wires": []
+	},
+	{
+		"id": "d504a098.1adf6",
+		"type": "subflow:a61efc55.35bde",
+		"z": "1bdb80b1.eb323f",
+		"g": "177ef365.30e0ed",
+		"name": "",
+		"x": 760,
+		"y": 1200,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "81017a01.97fa3",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "177ef365.30e0ed",
+		"name": "",
+		"func": "msg = {\n    command: 'location',\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 560,
+		"y": 1200,
+		"wires": [
+			[
+				"d504a098.1adf6"
+			]
+		]
+	},
+	{
+		"id": "e1977179.60968",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "177ef365.30e0ed",
+		"name": "",
+		"func": "msg = {\n    command: 'refresh-location',\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 540,
+		"y": 1120,
+		"wires": [
+			[
+				"21db686f.dd2c48"
+			]
+		]
+	},
+	{
+		"id": "21db686f.dd2c48",
+		"type": "subflow:bd5bde9e.6101c",
+		"z": "1bdb80b1.eb323f",
+		"g": "177ef365.30e0ed",
+		"name": "",
+		"x": 730,
+		"y": 1120,
+		"wires": [
+			[
+				"81017a01.97fa3"
+			]
+		]
+	},
+	{
+		"id": "fc67da82.91ca88",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "ba1d3621.0af9a8",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "86400",
+		"crontab": "",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 390,
+		"y": 1380,
+		"wires": [
+			[
+				"a9b6566e.a4b598"
+			]
+		]
+	},
+	{
+		"id": "a9b6566e.a4b598",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "ba1d3621.0af9a8",
+		"name": "",
+		"func": "function formatDate(date) {\n  var d = date;\n  dateFormatted = [\n   d.getFullYear(),\n   ('0' + (d.getMonth() + 1)).slice(-2),\n   ('0' + d.getDate()).slice(-2)\n  ].join('-');\n return dateFormatted;\n}\n\nvar endDate = formatDate(new Date());\nvar startDate = endDate.split('-')[0] + \"-\" + endDate.split('-')[1] + \"-01\";\n\nmsg = {\n    command: 'trip-history',\n    startDate: startDate,\n    endDate: endDate,\n    type: 1, //0 = daily, 1 = monthly, 2 = yearly\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;\n",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"x": 560,
+		"y": 1380,
+		"wires": [
+			[
+				"ef7c2a3e.ccc0d"
+			]
+		]
+	},
+	{
+		"id": "ef7c2a3e.ccc0d",
+		"type": "subflow:a61efc55.35bde",
+		"z": "1bdb80b1.eb323f",
+		"g": "ba1d3621.0af9a8",
+		"name": "",
+		"x": 740,
+		"y": 1380,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "d943473d.83661",
+		"type": "comment",
+		"z": "1bdb80b1.eb323f",
+		"g": "ba1d3621.0af9a8",
+		"name": "Request Trip-History this Month",
+		"info": "",
+		"x": 430,
+		"y": 1340,
+		"wires": []
+	},
+	{
+		"id": "078b09960accb2d1",
+		"type": "inject",
+		"z": "1bdb80b1.eb323f",
+		"g": "51266fb376f26bdf",
+		"name": "",
+		"props": [
+			{
+				"p": "payload"
+			},
+			{
+				"p": "topic",
+				"vt": "str"
+			}
+		],
+		"repeat": "86400",
+		"crontab": "",
+		"once": false,
+		"onceDelay": 0.1,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 390,
+		"y": 1500,
+		"wires": [
+			[
+				"ce87968c374c7aea"
+			]
+		]
+	},
+	{
+		"id": "ce87968c374c7aea",
+		"type": "function",
+		"z": "1bdb80b1.eb323f",
+		"g": "51266fb376f26bdf",
+		"name": "",
+		"func": "\nmsg = {\n    command: 'lockstatus',\n    conf: flow.get('conf'),\n    session: flow.get('session'),\n    payload: {}\n};\nreturn msg;\n",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 560,
+		"y": 1480,
+		"wires": [
+			[
+				"f7047f08eb62555b"
+			]
+		]
+	},
+	{
+		"id": "f7047f08eb62555b",
+		"type": "subflow:a61efc55.35bde",
+		"z": "1bdb80b1.eb323f",
+		"g": "51266fb376f26bdf",
+		"name": "",
+		"x": 780,
+		"y": 1500,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "2a6c0bde979f3bf2",
+		"type": "server-state-changed",
+		"z": "1bdb80b1.eb323f",
+		"name": "Update requested",
+		"server": "dc744c07.9aa72",
+		"version": 4,
+		"exposeToHomeAssistant": false,
+		"haConfig": [
+			{
+				"property": "name",
+				"value": ""
+			},
+			{
+				"property": "icon",
+				"value": ""
+			}
+		],
+		"entityidfilter": "input_button.ariya_update_lockstate",
+		"entityidfiltertype": "exact",
+		"outputinitially": false,
+		"state_type": "str",
+		"haltifstate": "",
+		"halt_if_type": "str",
+		"halt_if_compare": "is",
+		"outputs": 1,
+		"output_only_on_state_change": true,
+		"for": "0",
+		"forType": "num",
+		"forUnits": "minutes",
+		"ignorePrevStateNull": false,
+		"ignorePrevStateUnknown": false,
+		"ignorePrevStateUnavailable": false,
+		"ignoreCurrentStateUnknown": false,
+		"ignoreCurrentStateUnavailable": false,
+		"outputProperties": [
+			{
+				"property": "payload",
+				"propertyType": "msg",
+				"value": "",
+				"valueType": "entityState"
+			},
+			{
+				"property": "data",
+				"propertyType": "msg",
+				"value": "",
+				"valueType": "eventData"
+			},
+			{
+				"property": "topic",
+				"propertyType": "msg",
+				"value": "",
+				"valueType": "triggerId"
+			}
+		],
+		"x": 110,
+		"y": 1460,
+		"wires": [
+			[
+				"ce87968c374c7aea"
+			]
+		]
+	},
+	{
+		"id": "ac1fe19d70f18ef9",
+		"type": "server-state-changed",
+		"z": "1bdb80b1.eb323f",
+		"name": "Update requested",
+		"server": "dc744c07.9aa72",
+		"version": 4,
+		"exposeToHomeAssistant": false,
+		"haConfig": [
+			{
+				"property": "name",
+				"value": ""
+			},
+			{
+				"property": "icon",
+				"value": ""
+			}
+		],
+		"entityidfilter": "input_button.ariya_update_battery_and_temperature",
+		"entityidfiltertype": "exact",
+		"outputinitially": false,
+		"state_type": "str",
+		"haltifstate": "",
+		"halt_if_type": "str",
+		"halt_if_compare": "is",
+		"outputs": 1,
+		"output_only_on_state_change": true,
+		"for": "0",
+		"forType": "num",
+		"forUnits": "minutes",
+		"ignorePrevStateNull": false,
+		"ignorePrevStateUnknown": false,
+		"ignorePrevStateUnavailable": false,
+		"ignoreCurrentStateUnknown": false,
+		"ignoreCurrentStateUnavailable": false,
+		"outputProperties": [
+			{
+				"property": "payload",
+				"propertyType": "msg",
+				"value": "",
+				"valueType": "entityState"
+			},
+			{
+				"property": "data",
+				"propertyType": "msg",
+				"value": "",
+				"valueType": "eventData"
+			},
+			{
+				"property": "topic",
+				"propertyType": "msg",
+				"value": "",
+				"valueType": "triggerId"
+			}
+		],
+		"x": 110,
+		"y": 540,
+		"wires": [
+			[
+				"56d702f2.a569b4",
+				"5dd25679.cbd758"
+			]
+		]
+	},
+	{
+		"id": "0918ca457fe962e6",
+		"type": "server-state-changed",
+		"z": "1bdb80b1.eb323f",
+		"name": "Update Location",
+		"server": "dc744c07.9aa72",
+		"version": 4,
+		"exposeToHomeAssistant": false,
+		"haConfig": [
+			{
+				"property": "name",
+				"value": ""
+			},
+			{
+				"property": "icon",
+				"value": ""
+			}
+		],
+		"entityidfilter": "input_button.ariya_update_location",
+		"entityidfiltertype": "exact",
+		"outputinitially": false,
+		"state_type": "str",
+		"haltifstate": "",
+		"halt_if_type": "str",
+		"halt_if_compare": "is",
+		"outputs": 1,
+		"output_only_on_state_change": true,
+		"for": "0",
+		"forType": "num",
+		"forUnits": "minutes",
+		"ignorePrevStateNull": false,
+		"ignorePrevStateUnknown": false,
+		"ignorePrevStateUnavailable": false,
+		"ignoreCurrentStateUnknown": false,
+		"ignoreCurrentStateUnavailable": false,
+		"outputProperties": [
+			{
+				"property": "payload",
+				"propertyType": "msg",
+				"value": "",
+				"valueType": "entityState"
+			},
+			{
+				"property": "data",
+				"propertyType": "msg",
+				"value": "",
+				"valueType": "eventData"
+			},
+			{
+				"property": "topic",
+				"propertyType": "msg",
+				"value": "",
+				"valueType": "triggerId"
+			}
+		],
+		"x": 120,
+		"y": 1120,
+		"wires": [
+			[
+				"e1977179.60968"
+			]
+		]
+	},
+	{
+		"id": "dc744c07.9aa72",
+		"type": "server",
+		"name": "Home Assistant",
+		"version": 2,
+		"addon": true,
+		"rejectUnauthorizedCerts": true,
+		"ha_boolean": "y|yes|true|on|home|open",
+		"connectionDelay": true,
+		"cacheJson": true,
+		"heartbeat": false,
+		"heartbeatInterval": 30
+	}
+]
